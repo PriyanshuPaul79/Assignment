@@ -1,0 +1,69 @@
+<div id="zip-price-container-{{ block.id }}" style="margin: 10px 0; padding: 10px; border: 1px solid #e5e5e5; border-radius: 4px;">
+  <label for="zip-input-{{ block.id }}" style="display: block; font-weight: bold; margin-bottom: 5px;">Enter ZIP Code for Pricing:</label>
+  <div style="display: flex; gap: 10px;">
+    <input type="text" id="zip-input-{{ block.id }}" placeholder="e.g. 90210" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 100px;">
+    <button id="check-price-btn-{{ block.id }}" style="padding: 8px 15px; background-color: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Check Price</button>
+  </div>
+  <p id="price-display-{{ block.id }}" style="margin-top: 10px; font-weight: bold; color: #333;"></p>
+</div>
+
+<script>
+  (function() {
+    const blockId = '{{ block.id }}';
+    const variantId = '{{ product.selected_or_first_available_variant.id }}';
+    const zipInput = document.getElementById('zip-input-' + blockId);
+    const checkBtn = document.getElementById('check-price-btn-' + blockId);
+    const priceDisplay = document.getElementById('price-display-' + blockId);
+
+    checkBtn.addEventListener('click', function() {
+      const zipCode = zipInput.value.trim();
+      if (!zipCode) {
+        alert('Please enter a ZIP code');
+        return;
+      }
+
+      priceDisplay.innerText = "Checking price...";
+      checkBtn.disabled = true;
+
+      // Using Shopify App Proxy to avoid CORS and authenticate request
+      // Ensure your App Proxy URL is configured in the Shopify Partner Dashboard
+      const proxyUrl = '/apps/zip-pricing'; 
+
+      fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          'zipCode': zipCode,
+          'variantId': variantId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Format price as USD currency
+          const formattedPrice = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(data.price);
+          priceDisplay.innerHTML = `Price for ${data.zipCode}: <span style="color: #2c8a2c;">${formattedPrice}</span>`;
+        } else {
+          priceDisplay.innerText = "Error retrieving price.";
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        priceDisplay.innerText = "Network error. Please try again.";
+      })
+      .finally(() => {
+        checkBtn.disabled = false;
+      });
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "ZIP Code Pricing",
+  "target": "section",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,12 @@
+{
+  "name": "shopify-zip-pricing-app",
+  "version": "1.0.0",
+  "description": "Shopify app for ZIP code based product pricing",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.22.2"
+  }
+}
